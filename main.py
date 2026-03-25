@@ -7,7 +7,6 @@ import textwrap
 OUTPUT = "output"
 os.makedirs(OUTPUT, exist_ok=True)
 
-# Get news
 feed = feedparser.parse("http://feeds.bbci.co.uk/news/world/rss.xml")
 
 def clean(t):
@@ -16,14 +15,7 @@ def clean(t):
 for i, e in enumerate(feed.entries[:3]):
     title = clean(e.title)
 
-    # Keep your same structure
-    line1 = "BREAKING NEWS"
-    line2 = title[:80]
-    line3 = "This is getting global attention"
-    line4 = "Follow for more updates"
-
-    # ✅ FIX: wrap long text properly
-    wrapped_title = "\\n".join(textwrap.wrap(line2, width=28))
+    wrapped_title = "\\n".join(textwrap.wrap(title, width=28))
 
     name = f"video_{i}_{datetime.now().strftime('%H%M%S')}"
     video = f"{OUTPUT}/{name}.mp4"
@@ -33,19 +25,28 @@ for i, e in enumerate(feed.entries[:3]):
     -vf "
     scale=1080:1920,
 
-    drawbox=y=0:color=red@0.9:width=iw:height=140:t=fill,
+    # animated background effect
+    geq=r='(X/W)*255':g='(Y/H)*255':b='128',
 
-    drawtext=text='{line1}':fontcolor=white:fontsize=60:x=(w-text_w)/2:y=30,
+    # TOP RED BAR
+    drawbox=y=0:color=red@0.9:width=iw:height=150:t=fill,
 
-    drawtext=text='{wrapped_title}':fontcolor=white:fontsize=52:x=(w-text_w)/2:y=(h/2)-120:line_spacing=10,
+    drawtext=text='BREAKING NEWS':fontcolor=white:fontsize=60:
+    x=(w-text_w)/2:y=40,
 
-    drawtext=text='{line3}':fontcolor=white:fontsize=42:x=(w-text_w)/2:y=(h/2)+80,
+    # CENTER HEADLINE
+    drawtext=text='{wrapped_title}':fontcolor=white:fontsize=50:
+    x=(w-text_w)/2:y=(h/2)-150:line_spacing=12,
 
-    drawtext=text='{line4}':fontcolor=white:fontsize=36:x=(w-text_w)/2:y=(h/2)+150
+    # BOTTOM TICKER BAR
+    drawbox=y=h-200:color=blue@0.8:width=iw:height=200:t=fill,
+
+    drawtext=text='LIVE • WORLD NEWS • UPDATES':
+    fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h-140
     " \
     -pix_fmt yuv420p {video}
     """
 
     subprocess.call(cmd, shell=True)
 
-print("DONE: Fixed videos created")
+print("DONE: TV-style videos created")
